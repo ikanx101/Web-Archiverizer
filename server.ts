@@ -13,7 +13,9 @@ async function startServer() {
   app.post("/api/fetch-page", async (req, res) => {
     const { url, waitTime } = req.body;
     try {
-      const html = await fetchAndInline(url, waitTime || 0);
+      const parsedWaitTime = Number(waitTime) || 0;
+      console.log(`[API] Fetching ${url} with waitTime: ${parsedWaitTime}s`);
+      const html = await fetchAndInline(url, parsedWaitTime);
       res.send({ html });
     } catch (error: any) {
       console.error(`Error fetching ${url}:`, error);
@@ -44,19 +46,33 @@ async function fetchAndInline(pageUrl: string, waitTime: number) {
   let html = '';
   let browser;
   try {
-    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    console.log(`[Puppeteer] Launching browser for ${pageUrl}...`);
+    browser = await puppeteer.launch({ 
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] 
+    });
     const page = await browser.newPage();
     await page.setUserAgent(fetchOptions.headers['User-Agent']);
-    await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+    
+    console.log(`[Puppeteer] Navigating to ${pageUrl}...`);
+    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     if (waitTime > 0) {
+      console.log(`[Puppeteer] Waiting for ${waitTime} seconds...`);
       await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
     }
     
     html = await page.content();
+    console.log(`[Puppeteer] Successfully rendered ${pageUrl}`);
   } catch (error) {
-    console.error(`Puppeteer error for ${pageUrl}:`, error);
-    // Fallback to fetch if puppeteer fails
+    console.error(`[Puppeteer] Error for ${pageUrl}:`, error);
+    console.log(`[Fallback] Using standard fetch for ${pageUrl}...`);
+    
+    // Respect wait time even in fallback so the user sees the requested delay
+    if (waitTime > 0) {
+      console.log(`[Fallback] Waiting for ${waitTime} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+    }
+    
     const response = await fetch(pageUrl, fetchOptions);
     if (!response.ok) throw new Error(`Failed to fetch ${pageUrl}: ${response.statusText}`);
     html = await response.text();
