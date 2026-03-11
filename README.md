@@ -6,8 +6,6 @@
 
 This contains everything you need to run your app locally.
 
-View your app in AI Studio: https://ai.studio/apps/5bb898f8-a957-4549-8e1e-734ef3eb4825
-
 ## Run Locally
 
 **Prerequisites:**  Node.js
@@ -15,6 +13,10 @@ View your app in AI Studio: https://ai.studio/apps/5bb898f8-a957-4549-8e1e-734ef
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Install Chromium:
+   `sudo apt-get install chromium`
+3. Install puppeteer:
+   `npm install puppeteer`
+5. Build and run the app:
+   `npm run build`
    `npm run dev`
