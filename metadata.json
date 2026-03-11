@@ -1,0 +1,5 @@
+{
+  "name": "Webpage Archiver",
+  "description": "Save multiple webpages completely into single HTML files from a text file containing URLs.",
+  "requestFramePermissions": []
+}
