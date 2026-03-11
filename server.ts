@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import * as cheerio from "cheerio";
 import { URL } from "url";
+import puppeteer from "puppeteer";
 
 async function startServer() {
   const app = express();
@@ -10,9 +11,9 @@ async function startServer() {
   app.use(express.json());
 
   app.post("/api/fetch-page", async (req, res) => {
-    const { url } = req.body;
+    const { url, waitTime } = req.body;
     try {
-      const html = await fetchAndInline(url);
+      const html = await fetchAndInline(url, waitTime || 0);
       res.send({ html });
     } catch (error: any) {
       console.error(`Error fetching ${url}:`, error);
@@ -33,16 +34,37 @@ async function startServer() {
   });
 }
 
-async function fetchAndInline(pageUrl: string) {
+async function fetchAndInline(pageUrl: string, waitTime: number) {
   const fetchOptions = {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
     }
   };
 
-  const response = await fetch(pageUrl, fetchOptions);
-  if (!response.ok) throw new Error(`Failed to fetch ${pageUrl}: ${response.statusText}`);
-  const html = await response.text();
+  let html = '';
+  let browser;
+  try {
+    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+    await page.setUserAgent(fetchOptions.headers['User-Agent']);
+    await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+    
+    if (waitTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+    }
+    
+    html = await page.content();
+  } catch (error) {
+    console.error(`Puppeteer error for ${pageUrl}:`, error);
+    // Fallback to fetch if puppeteer fails
+    const response = await fetch(pageUrl, fetchOptions);
+    if (!response.ok) throw new Error(`Failed to fetch ${pageUrl}: ${response.statusText}`);
+    html = await response.text();
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
   
   const $ = cheerio.load(html);
   const baseUrl = new URL(pageUrl);

@@ -10,6 +10,7 @@ export default function App() {
   const [items, setItems] = useState<URLItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [waitTime, setWaitTime] = useState(2); // Default 2 seconds
 
   const handleURLsExtracted = (urls: string[]) => {
     const newItems = urls.map((url, index) => ({
@@ -40,7 +41,7 @@ export default function App() {
         const response = await fetch('/api/fetch-page', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: item.url }),
+          body: JSON.stringify({ url: item.url, waitTime }),
         });
 
         if (!response.ok) {
@@ -145,45 +146,64 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex items-center justify-end space-x-4">
-                <button
-                  onClick={reset}
-                  disabled={isProcessing}
-                  className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-50 flex items-center"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Mulai Ulang
-                </button>
-                
-                {!allDone && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {!allDone && !isProcessing && (
+                  <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg border border-zinc-200 shadow-sm">
+                    <label htmlFor="waitTime" className="text-sm font-medium text-zinc-700 whitespace-nowrap">
+                      Waktu Tunggu Render (detik):
+                    </label>
+                    <input
+                      id="waitTime"
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={waitTime}
+                      onChange={(e) => setWaitTime(Number(e.target.value))}
+                      className="w-16 px-2 py-1 text-sm border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+                <div className="flex-1"></div>
+                <div className="flex items-center space-x-4">
                   <button
-                    onClick={processURLs}
+                    onClick={reset}
                     disabled={isProcessing}
-                    className="px-6 py-2 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center shadow-sm"
+                    className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-50 flex items-center"
                   >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 mr-2" />
-                        Mulai Proses
-                      </>
-                    )}
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Mulai Ulang
                   </button>
-                )}
+                  
+                  {!allDone && (
+                    <button
+                      onClick={processURLs}
+                      disabled={isProcessing}
+                      className="px-6 py-2 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center shadow-sm"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Memproses...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          Mulai Proses
+                        </>
+                      )}
+                    </button>
+                  )}
 
-                {allDone && hasSuccess && (
-                  <button
-                    onClick={downloadZip}
-                    className="px-6 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center shadow-sm"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Unduh ZIP
-                  </button>
-                )}
+                  {allDone && hasSuccess && (
+                    <button
+                      onClick={downloadZip}
+                      className="px-6 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center shadow-sm"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Unduh ZIP
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
