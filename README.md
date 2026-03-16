@@ -11,12 +11,14 @@ This contains everything you need to run your app locally.
 **Prerequisites:**  Node.js
 
 
-1. Install dependencies:
+1. Install:
+   `apt install npm`
+3. Install dependencies:
    `npm install`
-2. Install Chromium:
+4. Install Chromium:
    `sudo apt-get install chromium`
-3. Install puppeteer:
+5. Install puppeteer:
    `npm install puppeteer`
-5. Build and run the app:
+6. Build and run the app:
    `npm run build`
    `npm run dev`
