@@ -16,7 +16,7 @@ This contains everything you need to run your app locally.
 3. Install dependencies:
    `npm install`
 4. Install Chromium:
-   `sudo apt-get install chromium`
+   `sudo apt-get install chromium-browser`
 5. Install puppeteer:
    `npm install puppeteer`
 6. Build and run the app:
